@@ -1,2 +1,13 @@
 *.class
 *.log
+.idea/
+project/
+/.idea/sbt.xml
+/.idea/scala_compiler.xml
+/.idea/.name
+/.idea/
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml
+/.idea/workspace.xml
+/.idea/modules/
