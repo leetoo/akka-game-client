@@ -1,38 +1,32 @@
+import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
-import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.{Keep, Source}
+import akka.stream.testkit.scaladsl.TestSink
 import org.scalatest.{FunSuite, Matchers}
 
-class ClientTest extends FunSuite with Matchers  {
+class ClientTest extends FunSuite with Matchers {
   /**
     * use ~testQuick in sbt terminal for continuous testing
     * https://doc.akka.io/docs/akka-http/current/client-side/websocket-support.html
     */
-  // test
-
-  // Future[Done] is the materialized value of Sink.foreach,
-  // emitted when the stream completes
-  val incoming = Sink.foreach[Message] {
-
-    case message: TextMessage.Strict =>      println(message.text)
+  test("should be able to login player  ") {
+    implicit val system: ActorSystem = ActorSystem()
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    val testSink = TestSink.probe[Message]
+    val outgoing = Source.empty[Message]
+    val webSocketFlow =
+      Http().webSocketClientFlow(WebSocketRequest("ws://localhost:8080/?playerName=dennis"))
+    val (upgradeResponse, testProbe) =
+      outgoing
+        .viaMat(webSocketFlow)(Keep.right) // keep the materialized Future[WebSocketUpgradeResponse]
+        .toMat(testSink)(Keep.both) // also keep the Future[Done]
+        .run()
+    testProbe.request(1)
+    testProbe.expectNext(TextMessage("[{\"name\":\"dennis\",\"position\":{\"x\":0," +
+      "\"y\":0}}]"))
   }
-
-  // send this as a message over the WebSocket
-  val outgoing = Source.single(TextMessage("hello world!"))
-
-  // flow to use (note: not re-usable!)
-  val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest("ws://echo.websocket.org"))
-
-  // the materialized value is a tuple with
-  // upgradeResponse is a Future[WebSocketUpgradeResponse] that
-  // completes or fails when the connection succeeds or fails
-  // and closed is a Future[Done] with the stream completion from the incoming sink
-  val (upgradeResponse, closed) =
-  outgoing
-    .viaMat(webSocketFlow)(Keep.right) // keep the materialized Future[WebSocketUpgradeResponse]
-    .toMat(incoming)(Keep.both) // also keep the Future[Done]
-    .run()
-
 }
 
 
