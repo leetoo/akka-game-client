@@ -54,7 +54,6 @@ object Main {
     val ((inputMat, result), outputMat) = client.run(input, output)
     val keyBoardHandler = new KeyBoardHandler(inputMat)
     new GUI(keyBoardHandler, display).main(args)
-
   }
 }
 case class Client(playerName: String)(implicit val actorSystem: ActorSystem, implicit val
@@ -137,10 +136,8 @@ class GUI(keyBoardHandler: KeyBoardHandler, display: Display) extends JFXApp {
   stage = new JFXApp.PrimaryStage {
     title.value = "client"
     scene = new Scene {
-      scene = new Scene {
-        content = display.panel
-        onKeyPressed = (ev: KeyEvent) => keyBoardHandler.handle(ev)
-      }
+      content = display.panel
+      onKeyPressed = (ev: KeyEvent) => keyBoardHandler.handle(ev)
     }
   }
 }
