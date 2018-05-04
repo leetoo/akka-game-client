@@ -10,6 +10,8 @@ import scalafx.application.JFXApp
 import scalafx.scene.Scene
 import scalafx.scene.input.{KeyCode, KeyEvent}
 
+import scala.io.StdIn
+
 class ClientTest extends FunSuite with Matchers {
   /**
     * use ~testQuick in sbt terminal for continuous testing
@@ -47,7 +49,9 @@ object Main {
   def main(args: Array[String]): Unit = {
     implicit val system: ActorSystem = ActorSystem()
     implicit val materializer: ActorMaterializer = ActorMaterializer()
-    val client = new Client("Denis")
+
+    val name = StdIn.readLine().trim
+    val client = new Client(name)
     val display = new Display()
     val input = Source.actorRef[String](5, OverflowStrategy.dropNew)
     val output = display.sink
@@ -78,10 +82,11 @@ case class Player(name: String, position: Position)
 case class Position(x: Int, y: Int)
 class KeyBoardHandler(keyboardEventReceiver: ActorRef) {
   def handle(keyEvent: KeyEvent) = keyEvent.code match {
-    case KeyCode.Up => keyboardEventReceiver ! "up"
-    case KeyCode.Down => keyboardEventReceiver ! "down"
-    case KeyCode.Left => keyboardEventReceiver ! "left"
-    case KeyCode.Right => keyboardEventReceiver ! "right"
+    case KeyCode.Up => keyboardEventReceiver ! "down" // "down"  // scala coordinate is reversed
+    case KeyCode.Down => keyboardEventReceiver ! "up" // "up"
+    case KeyCode.Left => keyboardEventReceiver ! "right" // "right"
+    case KeyCode.Right => keyboardEventReceiver ! "left" // "left"
+    case _ => // solved run-time exception
   }
 }
 import akka.stream.scaladsl.Sink
